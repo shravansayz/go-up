@@ -1,0 +1,19 @@
+#!/bin/bash
+MINPARAMS=1
+GOSERVER="https://store1.gofile.io"
+
+for FILE in "$@"
+do
+	FILENAME="${FILE##*/}"
+
+	echo "Uploading $FILENAME ... "
+	RESPONSE=$(curl -# -F "name=$FILENAME" -F "file=@$FILE" $GOSERVER/contents/uploadfile)
+	GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
+	GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
+
+	echo "Your file URL: $GOLINK"
+	echo "MD5: $GOMD5"
+	echo ""
+done
+
+echo "" # Move cursor down when script finishes
