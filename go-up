@@ -2,18 +2,31 @@
 MINPARAMS=1
 GOSERVER="https://store1.gofile.io"
 
+# Colors
+BLD=$(tput bold)
+RST=$(tput sgr0)
+RED=$RST$(tput setaf 1)
+GRN=$RST$(tput setaf 2)
+BLD_GRN=$RST$BLD$(tput setaf 2)
+
 for FILE in "$@"
 do
 	FILENAME="${FILE##*/}"
 
-	echo "Uploading $FILENAME ... "
+	echo "${BLD_GRN}Uploading $FILENAME ... "
 	RESPONSE=$(curl -# -F "name=$FILENAME" -F "file=@$FILE" $GOSERVER/contents/uploadfile)
-	GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
-	GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
 
-	echo "Your file URL: $GOLINK"
-	echo "MD5: $GOMD5"
-	echo ""
+    UPLOAD_STATUS=$(echo "$RESPONSE" | grep -Po '(?<="status":")[^"]*')
+
+	if [ "$UPLOAD_STATUS" = 'ok' ]; then
+			GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
+			GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
+			echo "${BLD_GRN}Download: ${GRN}$GOLINK"
+			echo "${BLD_GRN}MD5: ${GRN}$GOMD5"
+	else
+			echo "${RED}Upload failed!"
+	fi
+			echo ""
 done
 
 echo "" # Move cursor down when script finishes
