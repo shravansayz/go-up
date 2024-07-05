@@ -1,32 +1,32 @@
 #!/bin/bash
-MINPARAMS=1
-GOSERVER="https://store1.gofile.io"
+DEVICE=$1
+OUT_DIR="out/target/product/$DEVICE"
+BUILD_PACKAGE="$(find "$OUT_DIR" -name "PixelOS_$DEVICE-14.0-*.zip" -print -quit)"
 
-# Colors
-BLD=$(tput bold)
-RST=$(tput sgr0)
-RED=$RST$(tput setaf 1)
-GRN=$RST$(tput setaf 2)
-BLD_GRN=$RST$BLD$(tput setaf 2)
+gofile_upload() {
+    local FILE_PATH="$1"
+    local FILE_NAME="${FILE_PATH##*/}"
 
-for FILE in "$@"
-do
-	FILENAME="${FILE##*/}"
+    local response
+    response=$(curl -# -F "name=$FILE_NAME" -F "file=@$FILE_PATH" "https://store1.gofile.io/contents/uploadfile")
 
-	echo "${BLD_GRN}Uploading $FILENAME ... "
-	RESPONSE=$(curl -# -F "name=$FILENAME" -F "file=@$FILE" $GOSERVER/contents/uploadfile)
+    local UPLOAD_STATUS
+    UPLOAD_STATUS=$(echo "$response" | grep -Po '(?<="status":")[^"]*')
 
-    UPLOAD_STATUS=$(echo "$RESPONSE" | grep -Po '(?<="status":")[^"]*')
+    if [ "$UPLOAD_STATUS" = 'ok' ]; then
+        local URL_ID
+        URL_ID=$(echo "$response" | grep -Po '(?<="downloadPage":")[^"]*')
 
-	if [ "$UPLOAD_STATUS" = 'ok' ]; then
-			GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
-			GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
-			echo "${BLD_GRN}Download: ${GRN}$GOLINK"
-			echo "${BLD_GRN}MD5: ${GRN}$GOMD5"
-	else
-			echo "${RED}Upload failed!"
-	fi
-			echo ""
-done
+        echo "Download: $URL_ID"
+    else
+        echo "Upload failed!"
+    fi
+}
 
-echo "" # Move cursor down when script finishes
+
+if [ -n "$BUILD_PACKAGE" ]; then
+    echo "Starting Upload..."
+    gofile_upload $BUILD_PACKAGE
+else
+    echo "Build package not found!!"
+fi
