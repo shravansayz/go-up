@@ -9,24 +9,32 @@ RED=$RST$(tput setaf 1)
 GRN=$RST$(tput setaf 2)
 BLD_GRN=$RST$BLD$(tput setaf 2)
 
-for FILE in "$@"
-do
-	FILENAME="${FILE##*/}"
+# Device
+BUILD_PACKAGE="out/target/product/alioth/PixelOS_alioth-15.0-*.zip"
 
-	echo "${BLD_GRN}Uploading $FILENAME ... "
-	RESPONSE=$(curl -# -F "name=$FILENAME" -F "file=@$FILE" $GOSERVER/contents/uploadfile)
+# Upload
+gofile_upload() {
+    local FILE_PATH="$1"
+    local FILE_NAME="${FILE_PATH##*/}"
 
+    echo "${BLD_GRN}Uploading $FILENAME ... "
+
+    RESPONSE=$(curl -# -F "name=$FILE_NAME" -F "file=@$FILE_PATH" "$GOSERVER/contents/uploadfile")
     UPLOAD_STATUS=$(echo "$RESPONSE" | grep -Po '(?<="status":")[^"]*')
 
-	if [ "$UPLOAD_STATUS" = 'ok' ]; then
-			GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
-			GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
-			echo "${BLD_GRN}Download: ${GRN}$GOLINK"
-			echo "${BLD_GRN}MD5: ${GRN}$GOMD5"
-	else
-			echo "${RED}Upload failed!"
-	fi
-			echo ""
-done
+    if [ "$UPLOAD_STATUS" = 'ok' ]; then
+        GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
+        GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
 
-echo "" # Move cursor down when script finishes
+        echo "${BLD_GRN}Download: ${GRN}$GOLINK"
+        echo "${BLD_GRN}MD5: ${GRN}$GOMD5"
+    else
+        echo "${RED}Upload failed!"
+    fi
+}
+
+if [ -n "$BUILD_PACKAGE" ]; then
+    gofile_upload $BUILD_PACKAGE
+else
+    echo "${RED}Build package not found!"
+fi
