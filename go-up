@@ -10,7 +10,7 @@ GRN=$RST$(tput setaf 2)
 BLD_GRN=$RST$BLD$(tput setaf 2)
 
 # Device
-BUILD_PACKAGE="out/target/product/alioth/PixelOS_alioth-15.0-*.zip"
+BUILD_PACKAGE="out/target/product/alioth/PixelOS_RMX1901-15.0-*.zip"
 
 # Upload
 gofile_upload() {
