@@ -11,6 +11,12 @@ BLD_GRN=$RST$BLD$(tput setaf 2)
 
 for FILE in "$@"
 do
+
+    if [ ! -f "$FILE" ]; then
+        echo "${RED} \"$FILE\" not found!"
+        continue
+    fi
+
 	FILENAME="${FILE##*/}"
 
 	echo "${BLD_GRN}Uploading $FILENAME ... "
