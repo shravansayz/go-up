@@ -9,24 +9,29 @@ RED=$RST$(tput setaf 1)
 GRN=$RST$(tput setaf 2)
 BLD_GRN=$RST$BLD$(tput setaf 2)
 
-for FILE in "$@"
-do
-	FILENAME="${FILE##*/}"
+for FILE in "$@"; do
 
-	echo "${BLD_GRN}Uploading $FILENAME ... "
-	RESPONSE=$(curl -# -F "name=$FILENAME" -F "file=@$FILE" $GOSERVER/contents/uploadfile)
+  if [ ! -f "$FILE" ]; then
+    echo "${RED} \"$FILE\" not found!"
+    continue
+  fi
 
-    UPLOAD_STATUS=$(echo "$RESPONSE" | grep -Po '(?<="status":")[^"]*')
+  FILENAME="${FILE##*/}"
 
-	if [ "$UPLOAD_STATUS" = 'ok' ]; then
-			GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
-			GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
-			echo "${BLD_GRN}Download: ${GRN}$GOLINK"
-			echo "${BLD_GRN}MD5: ${GRN}$GOMD5"
-	else
-			echo "${RED}Upload failed!"
-	fi
-			echo ""
+  echo "${BLD_GRN}Uploading $FILENAME ... "
+  RESPONSE=$(curl -# -F "name=$FILENAME" -F "file=@$FILE" $GOSERVER/contents/uploadfile)
+
+  UPLOAD_STATUS=$(echo "$RESPONSE" | grep -Po '(?<="status":")[^"]*')
+
+  if [ "$UPLOAD_STATUS" = 'ok' ]; then
+    GOLINK=$(echo $RESPONSE | grep -Po '(?<="downloadPage":")[^"]*')
+    GOMD5=$(echo $RESPONSE | grep -Po '(?<="md5":")[^"]*')
+    echo "${BLD_GRN}Download: ${GRN}$GOLINK"
+    echo "${BLD_GRN}MD5: ${GRN}$GOMD5"
+  else
+    echo "${RED}Upload failed!"
+  fi
+  echo ""
 done
 
 echo "" # Move cursor down when script finishes
